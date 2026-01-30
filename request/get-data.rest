@@ -1,0 +1,13 @@
+GET http://localhost:3001/api/persons
+
+### GET info
+GET http://localhost:3001/info
+
+### GET safe ID
+GET http://localhost:3001/api/persons/4
+
+### GET ID that is not in our data
+GET http://localhost:3001/api/persons/100
+
+### Unknown Endpoint
+GET http://localhost:3001/unknown

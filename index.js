@@ -1,3 +1,6 @@
+require('dotenv').config();
+const Person = require('./models/person');
+
 const express = require('express');
 app = express();
 const morgan = require('morgan');
@@ -20,51 +23,35 @@ const requestLogger = (request, response, next) => {
 
 app.use(requestLogger);
 
-let persons = [
-  {
-    "id": "1",
-    "name": "Arto Hellas",
-    "number": "040-123456"
-  },
-  {
-    "id": "2",
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523"
-  },
-  {
-    "id": "3",
-    "name": "Dan Abramov",
-    "number": "12-43-234345"
-  },
-  {
-    "id": "4",
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122"
-  }
-];
-
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/info", (request, response) => {
-  const numOfPeople = persons.length;
-  const timeReceived = new Date().toString();
-
-  response.send(`Phonebook has info for ${numOfPeople} people <br /> ${timeReceived}`);
+  Person.find({}).then(persons => {
+    const numOfPeople = persons.length;
+    const timeReceived = new Date().toString();
+    response.send(`Phonebook has info for ${numOfPeople} people <br /> ${timeReceived}`);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
   const id = request.params.id;
 
-  const person = persons.find(p => p.id === id);
-
-  if (person) {
+  Person.findById(id).then((person) => {
     response.json(person);
-  } else {
-    response.statusMessage = `Couldn't find the person you are looking for with id "${id}"`;
-    response.status(404).end();
-  }
+  });
+
+  // const person = persons.find(p => p.id === id);
+  //
+  // if (person) {
+  //   response.json(person);
+  //   response.statusMessage = `Couldn't find the person you are looking for with id "${id}"`;
+  // } else {
+  //   response.status(404).end();
+  // }
 });
 
 const generateID = () => {
@@ -84,18 +71,19 @@ app.post('/api/persons', (request, response) => {
     return response.status(400).json({ error: "Missing number" });
   }
 
-  if (persons.find(p => p.name === body.name)) {
-    return response.status(400).json({ error: "name must be unique" });
-  }
+  // if (persons.find(p => p.name === body.name)) {
+  //   return response.status(400).json({ error: "name must be unique" });
+  // }
 
-  const newPerson = {
-    id: String(generateID()),
+  const newPerson = new Person({
     name: body.name,
     number: body.number
-  };
+  });
 
-  persons = persons.concat(newPerson);
-  response.json(newPerson);
+  newPerson.save().then(savedPerson => {
+    console.log(`The phone number and details for "${newPerson.name}" was saved!`);
+    response.json(savedPerson);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
